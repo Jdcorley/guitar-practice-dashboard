@@ -1,0 +1,111 @@
+import { Button } from "std-widgets.slint";
+
+component Pane inherits Rectangle {
+    in property <int> pane-id;
+    in-out property <int> content-kind;
+    in-out property <string> header-title;
+    in property <color> panel_bg;
+    in property <color> header_bg;
+    in property <color> text_color;
+    in property <length> corner_radius;
+    in property <length> gutter;
+
+    border-radius: corner_radius;
+    background: panel_bg;
+    border-width: 1px; border-color: #3A3D47;
+
+    VerticalLayout {
+        spacing: 0px;
+
+        Rectangle {
+            height: 34px; background: header_bg;
+            border-radius: corner_radius;
+
+            HorizontalLayout {
+                padding-left: gutter; padding-right: gutter;
+                Text { text: header-title; color: text_color; vertical-alignment: center; }
+                HorizontalLayout { }
+                Button { text: "✕"; clicked => { root.content-kind = 0; } }
+            }
+        }
+
+        Rectangle {
+            background: panel_bg;
+
+            Metronome { visible: content-kind == 1; }
+            ChordSheet { visible: content-kind == 2; }
+            VideoPanel { visible: content-kind == 3; }
+            VerticalLayout {
+                visible: content-kind == 0;
+                alignment: center;
+                Text { color: #9AA0A6; text: "Use menu to add a component"; }
+            }
+        }
+    }
+}
+
+export component AppWindow inherits Window {
+    width: 1200px; height: 800px; title: "Guitar Practice";
+
+    in property <color> surface_bg: #1E1F24;
+    in property <color> panel_bg: #262830;
+    in property <color> header_bg: #2E313A;
+    in property <color> text_color: #E6E6E6;
+    in property <color> accent: #5CC8FF;
+    in property <length> corner_radius: 8px;
+    in property <length> gutter: 10px;
+
+    in-out property <string> tl_title;
+    in-out property <string> tr_title;
+    in-out property <string> bl_title;
+    in-out property <string> br_title;
+
+    in-out property <int> tl_kind;
+    in-out property <int> tr_kind;
+    in-out property <int> bl_kind;
+    in-out property <int> br_kind;
+
+    callback open-metronome(pane: int);
+    callback open-chord-sheet(pane: int);
+    callback open-video-panel(pane: int);
+    callback close-pane(pane: int);
+
+    background: surface_bg;
+
+    VerticalLayout {
+        spacing: 0px;
+
+        // Menu bar to be added later
+
+        VerticalLayout { spacing: 6px;
+            HorizontalLayout { spacing: 6px;
+                Pane { pane-id: 0; content-kind: root.tl_kind; header-title: root.tl_title;
+                    panel_bg: root.panel_bg; header_bg: root.header_bg; text_color: root.text_color;
+                    corner_radius: root.corner_radius; gutter: root.gutter;
+                }
+                Pane { pane-id: 1; content-kind: root.tr_kind; header-title: root.tr_title;
+                    panel_bg: root.panel_bg; header_bg: root.header_bg; text_color: root.text_color;
+                    corner_radius: root.corner_radius; gutter: root.gutter;
+                }
+            }
+            HorizontalLayout { spacing: 6px;
+                Pane { pane-id: 2; content-kind: root.bl_kind; header-title: root.bl_title;
+                    panel_bg: root.panel_bg; header_bg: root.header_bg; text_color: root.text_color;
+                    corner_radius: root.corner_radius; gutter: root.gutter;
+                }
+                Pane { pane-id: 3; content-kind: root.br_kind; header-title: root.br_title;
+                    panel_bg: root.panel_bg; header_bg: root.header_bg; text_color: root.text_color;
+                    corner_radius: root.corner_radius; gutter: root.gutter;
+                }
+            }
+        }
+    }
+}
+
+// (Pane defined above)
+
+import { Metronome } from "components/Metronome.slint";
+import { ChordSheet } from "components/ChordSheet.slint";
+import { VideoPanel } from "components/VideoPanel.slint";
+
+
