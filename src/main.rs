@@ -33,7 +33,7 @@ static COMPONENT_NAMES: Lazy<Vec<(ComponentKind, &'static str)>> = Lazy::new(|| 
     ]
 });
 
-fn apply_component(app: &AppWindow, pane: PaneId, kind: ComponentKind) {
+fn apply_component(app: &AppWindow, kind: ComponentKind) {
     let title = match kind {
         ComponentKind::None => "",
         ComponentKind::Metronome => "Metronome",
@@ -45,12 +45,8 @@ fn apply_component(app: &AppWindow, pane: PaneId, kind: ComponentKind) {
     };
     let title = SharedString::from(title);
 
-    match pane {
-        PaneId::TopLeft => { app.set_tl_title(title.clone()); app.set_tl_kind(kind_to_tag(kind)); }
-        PaneId::TopRight => { app.set_tr_title(title.clone()); app.set_tr_kind(kind_to_tag(kind)); }
-        PaneId::BottomLeft => { app.set_bl_title(title.clone()); app.set_bl_kind(kind_to_tag(kind)); }
-        PaneId::BottomRight => { app.set_br_title(title.clone()); app.set_br_kind(kind_to_tag(kind)); }
-    }
+    app.set_main_title(title);
+    app.set_main_kind(kind_to_tag(kind));
     let _ = save_layout(app);
 }
 
@@ -68,10 +64,7 @@ fn kind_to_tag(kind: ComponentKind) -> i32 {
 
 #[derive(Serialize, Deserialize, Default)]
 struct Layout {
-    tl_kind: i32,
-    tr_kind: i32,
-    bl_kind: i32,
-    br_kind: i32,
+    main_kind: i32,
 }
 
 fn layout_path() -> std::io::Result<std::path::PathBuf> {
@@ -83,10 +76,7 @@ fn layout_path() -> std::io::Result<std::path::PathBuf> {
 
 fn save_layout(app: &AppWindow) -> std::io::Result<()> {
     let layout = Layout {
-        tl_kind: app.get_tl_kind(),
-        tr_kind: app.get_tr_kind(),
-        bl_kind: app.get_bl_kind(),
-        br_kind: app.get_br_kind(),
+        main_kind: app.get_main_kind(),
     };
     let path = layout_path()?;
     let data = serde_json::to_vec_pretty(&layout)
@@ -98,14 +88,8 @@ fn load_layout(app: &AppWindow) -> std::io::Result<()> {
     let path = layout_path()?;
     if let Ok(bytes) = std::fs::read(path) {
         if let Ok(layout) = serde_json::from_slice::<Layout>(&bytes) {
-            app.set_tl_kind(layout.tl_kind);
-            app.set_tr_kind(layout.tr_kind);
-            app.set_bl_kind(layout.bl_kind);
-            app.set_br_kind(layout.br_kind);
-            app.set_tl_title(title_for(layout.tl_kind));
-            app.set_tr_title(title_for(layout.tr_kind));
-            app.set_bl_title(title_for(layout.bl_kind));
-            app.set_br_title(title_for(layout.br_kind));
+            app.set_main_kind(layout.main_kind);
+            app.set_main_title(title_for(layout.main_kind));
         }
     }
     Ok(())
@@ -123,27 +107,28 @@ fn title_for(kind_tag: i32) -> SharedString {
     }
 }
 
-// Generate fret data for a specific string (25 frets: 0-24)
-// Use Box to ensure data is allocated on the heap, not the stack
+// Generate fret data for a specific string
+// Using 12 frets (0-11) to keep component count manageable
+// With only 1 pane now, we only create 1 Fretboard = 6 strings × 12 frets = 72 components (safe)
+const INITIAL_FRET_COUNT: u8 = 12;
+
 fn generate_string_data(string: i32, key: Key, scale: Scale) -> slint::ModelRc<FretData> {
-    // Pre-allocate with capacity to avoid reallocations
-    let mut data = Vec::with_capacity(25);
+    let mut data = Vec::with_capacity(INITIAL_FRET_COUNT as usize);
     
-    // Generate data for all 25 frets (0-24)
-    for fret in 0..25 {
-        let note = music_theory::get_note_at_position(string as u8, fret as u8);
+    // Generate data for 12 frets (0-11)
+    for fret in 0..INITIAL_FRET_COUNT {
+        let note = music_theory::get_note_at_position(string as u8, fret);
         let note_name = note.name();
         let is_in_scale = music_theory::is_note_in_scale(note, key, scale);
         
         data.push(FretData {
             string: string,
-            fret: fret,
+            fret: fret as i32,
             note_name: SharedString::from(note_name),
             is_in_scale,
         });
     }
     
-    // Move the Vec into a Box to ensure heap allocation
     slint::ModelRc::new(slint::VecModel::from(data))
 }
 
@@ -290,6 +275,12 @@ fn run_app(disable_audio: bool, disable_layout: bool, disable_callbacks: bool) -
         eprintln!("[STEP 5/10] Loading layout...");
         let _ = load_layout(&app);
         eprintln!("[STEP 5/10] ✓ Layout loaded");
+        
+        // If layout loaded with Fretboard active, populate fret data
+        if app.get_main_kind() == 4 {
+            eprintln!("[STEP 5/10] Fretboard detected in layout, populating fret data...");
+            update_fret_data(&app);
+        }
     }
 
     // Callbacks setup (optional)
@@ -298,30 +289,28 @@ fn run_app(disable_audio: bool, disable_layout: bool, disable_callbacks: bool) -
     } else {
         eprintln!("[STEP 6/10] Setting up callbacks...");
         
-        { let app_weak = app.as_weak();
-          app.on_open_metronome(move |pane| { if let Some(app) = app_weak.upgrade() {
-              apply_component(&app, pane_id_from(pane), ComponentKind::Metronome);
-          }}); }
-        { let app_weak = app.as_weak();
-          app.on_open_chord_sheet(move |pane| { if let Some(app) = app_weak.upgrade() {
-              apply_component(&app, pane_id_from(pane), ComponentKind::ChordSheet);
-          }}); }
-        { let app_weak = app.as_weak();
-          app.on_open_video_panel(move |pane| { if let Some(app) = app_weak.upgrade() {
-              apply_component(&app, pane_id_from(pane), ComponentKind::VideoPanel);
-          }}); }
-        { let app_weak = app.as_weak();
-          app.on_open_fretboard(move |pane| { if let Some(app) = app_weak.upgrade() {
-              apply_component(&app, pane_id_from(pane), ComponentKind::Fretboard);
-          }}); }
-        { let app_weak = app.as_weak();
-          app.on_open_keys(move |pane| { if let Some(app) = app_weak.upgrade() {
-              apply_component(&app, pane_id_from(pane), ComponentKind::Keys);
-          }}); }
-        { let app_weak = app.as_weak();
-          app.on_close_pane(move |pane| { if let Some(app) = app_weak.upgrade() {
-              apply_component(&app, pane_id_from(pane), ComponentKind::None);
-          }}); }
+        // Wire up add-component callback - this is called when user clicks a component button in the menu
+        {
+            let app_weak = app.as_weak();
+            app.on_add_component(move |kind| {
+                if let Some(app) = app_weak.upgrade() {
+                    let component_kind = match kind {
+                        1 => ComponentKind::Metronome,
+                        2 => ComponentKind::ChordSheet,
+                        3 => ComponentKind::VideoPanel,
+                        4 => ComponentKind::Fretboard,
+                        5 => ComponentKind::Keys,
+                        6 => ComponentKind::Scales,
+                        _ => ComponentKind::None,
+                    };
+                    apply_component(&app, component_kind);
+                    // If Fretboard is being shown, ensure fret data is populated
+                    if kind == 4 {
+                        update_fret_data(&app);
+                    }
+                }
+            });
+        }
 
         // Wire up fretboard interactions
         {
@@ -361,24 +350,6 @@ fn run_app(disable_audio: bool, disable_layout: bool, disable_callbacks: bool) -
             });
         }
 
-        // Wire up add-component-pane callback
-        {
-            let app_weak = app.as_weak();
-            app.on_add_component_pane(move |pane, kind| {
-                if let Some(app) = app_weak.upgrade() {
-                    let component_kind = match kind {
-                        1 => ComponentKind::Metronome,
-                        2 => ComponentKind::ChordSheet,
-                        3 => ComponentKind::VideoPanel,
-                        4 => ComponentKind::Fretboard,
-                        5 => ComponentKind::Keys,
-                        6 => ComponentKind::Scales,
-                        _ => ComponentKind::None,
-                    };
-                    apply_component(&app, pane_id_from(pane), component_kind);
-                }
-            });
-        }
         
         eprintln!("[STEP 6/10] ✓ Callbacks set up");
     }

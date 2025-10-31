@@ -302,7 +302,7 @@ export component Fretboard inherits Rectangle {
             }
         }
         
-        // Fret numbers along bottom
+        // Fret numbers along bottom - Updated to match initial 12 frets (0-11)
         Rectangle {
             height: 24px;
             background: transparent;
@@ -324,19 +324,8 @@ export component Fretboard inherits Rectangle {
                 Rectangle { width: 30px; }
                 Rectangle { width: 30px; }
                 Rectangle { width: 30px; Text { text: "12"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
-                Rectangle { width: 30px; }
-                Rectangle { width: 30px; }
-                Rectangle { width: 30px; Text { text: "15"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
-                Rectangle { width: 30px; }
-                Rectangle { width: 30px; Text { text: "17"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
-                Rectangle { width: 30px; }
-                Rectangle { width: 30px; Text { text: "19"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
-                Rectangle { width: 30px; }
-                Rectangle { width: 30px; Text { text: "21"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
-                Rectangle { width: 30px; }
-                Rectangle { width: 30px; }
-                Rectangle { width: 30px; }
-                Rectangle { width: 30px; Text { text: "24"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
+                // Note: Initially showing 12 frets (0-11) to prevent stack overflow
+                // Can expand to 24+ frets later if needed
             }
         }
     }

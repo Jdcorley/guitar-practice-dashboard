@@ -15,7 +15,17 @@ With 4 Panes, each containing a Fretboard component with 6 `for` loops (each ite
 This caused the stack to overflow during Slint's initialization phase.
 
 ## Solution
-Temporarily disabled the Fretboard component during initialization by commenting it out and replacing with a simple placeholder Rectangle.
+**Currently:** Fretboard component is disabled with a placeholder. Even with reduced frets (12 instead of 25), creating 4 Fretboard instances still causes stack overflow.
+
+**Root cause:** Slint creates ALL component instances during `AppWindow::new()` initialization, even when `visible: false`. There is no lazy loading or conditional component creation in Slint 1.5.
+
+**Temporary fix:** Replaced Fretboard with a simple Rectangle placeholder.
+
+**Future solutions needed:**
+1. Use Canvas-based rendering instead of component-based (render fretboard as pixels, not components)
+2. Implement single Fretboard instance that can be shared/reused
+3. Wait for Slint to support lazy component creation
+4. Reduce to a much smaller number of frets (tested: 12 still too many with 4 panes)
 
 ## Diagnostic Process Used
 1. Created minimal test - confirmed basic Slint works
