@@ -232,4 +232,115 @@ pub fn is_fret_marked(fret: u8) -> bool {
     get_marked_frets().contains(&fret)
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_key_from_int() {
+        assert_eq!(Key::from_int(0), Key::C);
+        assert_eq!(Key::from_int(11), Key::B);
+        assert_eq!(Key::from_int(4), Key::E);
+    }
+
+    #[test]
+    fn test_key_to_int() {
+        assert_eq!(Key::C.to_int(), 0);
+        assert_eq!(Key::B.to_int(), 11);
+        assert_eq!(Key::E.to_int(), 4);
+    }
+
+    #[test]
+    fn test_scale_intervals() {
+        // Major scale: W-W-H-W-W-W-H (whole, whole, half, whole, whole, whole, half)
+        let major = Scale::Major.intervals();
+        assert_eq!(major.len(), 7);
+        assert_eq!(major, vec![0, 2, 4, 5, 7, 9, 11]); // C D E F G A B
+    }
+
+    #[test]
+    fn test_get_note_at_position() {
+        // String 0 (low E), fret 0 = E2
+        let note = get_note_at_position(0, 0);
+        assert_eq!(note.note, Key::E);
+        assert_eq!(note.octave, 2);
+
+        // String 0, fret 5 = A2 (5 semitones up from E)
+        let note = get_note_at_position(0, 5);
+        assert_eq!(note.note, Key::A);
+        assert_eq!(note.octave, 2);
+
+        // String 5 (high E), fret 0 = E4
+        let note = get_note_at_position(5, 0);
+        assert_eq!(note.note, Key::E);
+        assert_eq!(note.octave, 4);
+    }
+
+    #[test]
+    fn test_is_note_in_scale() {
+        // C Major scale contains: C, D, E, F, G, A, B
+        let key = Key::C;
+        let scale = Scale::Major;
+
+        // Notes in C Major
+        assert!(is_note_in_scale(Note { note: Key::C, octave: 4 }, key, scale));
+        assert!(is_note_in_scale(Note { note: Key::D, octave: 4 }, key, scale));
+        assert!(is_note_in_scale(Note { note: Key::E, octave: 4 }, key, scale));
+        assert!(is_note_in_scale(Note { note: Key::F, octave: 4 }, key, scale));
+        assert!(is_note_in_scale(Note { note: Key::G, octave: 4 }, key, scale));
+        assert!(is_note_in_scale(Note { note: Key::A, octave: 4 }, key, scale));
+        assert!(is_note_in_scale(Note { note: Key::B, octave: 4 }, key, scale));
+
+        // Notes NOT in C Major (sharps/flats)
+        assert!(!is_note_in_scale(Note { note: Key::Cs, octave: 4 }, key, scale));
+        assert!(!is_note_in_scale(Note { note: Key::Ds, octave: 4 }, key, scale));
+        assert!(!is_note_in_scale(Note { note: Key::Fs, octave: 4 }, key, scale));
+    }
+
+    #[test]
+    fn test_calculate_frequency() {
+        // A4 = 440 Hz (concert pitch)
+        let a4 = Note { note: Key::A, octave: 4 };
+        let freq = calculate_frequency(a4);
+        assert!((freq - 440.0).abs() < 0.1); // Allow small floating point error
+
+        // C4 = ~261.63 Hz
+        let c4 = Note { note: Key::C, octave: 4 };
+        let freq = calculate_frequency(c4);
+        assert!((freq - 261.63).abs() < 0.5);
+    }
+
+    #[test]
+    fn test_get_string_base_notes() {
+        let base_notes = get_string_base_notes();
+        assert_eq!(base_notes.len(), 6);
+        // Standard guitar tuning: E2, A2, D3, G3, B3, E4
+        assert_eq!(base_notes[0].note, Key::E);
+        assert_eq!(base_notes[0].octave, 2);
+        assert_eq!(base_notes[5].note, Key::E);
+        assert_eq!(base_notes[5].octave, 4);
+    }
+
+    #[test]
+    fn test_octave_wraparound() {
+        // Test that going up 12 frets wraps around the octave
+        let note1 = get_note_at_position(0, 0);  // E2 (string 0, open)
+        let note2 = get_note_at_position(0, 12); // E3 (same note, octave up)
+        assert_eq!(note1.note, note2.note);
+        assert_eq!(note2.octave, note1.octave + 1);
+    }
+
+    #[test]
+    fn test_fret_markers() {
+        // Test marked frets
+        assert!(is_fret_marked(3));
+        assert!(is_fret_marked(12));
+        assert!(is_fret_marked(21));
+        
+        // Test unmarked frets
+        assert!(!is_fret_marked(1));
+        assert!(!is_fret_marked(2));
+        assert!(!is_fret_marked(4));
+    }
+}
 
