@@ -44,9 +44,15 @@ fn apply_component(app: &AppWindow, kind: ComponentKind) {
         ComponentKind::Scales => "Scales",
     };
     let title = SharedString::from(title);
+    let kind_tag = kind_to_tag(kind.clone());
 
+    eprintln!("[apply_component] Setting component: {:?} -> kind_tag: {}, title: {}", kind, kind_tag, title);
+    
     app.set_main_title(title);
-    app.set_main_kind(kind_to_tag(kind));
+    app.set_main_kind(kind_tag);
+    
+    eprintln!("[apply_component] After setting: main_kind = {}", app.get_main_kind());
+    
     let _ = save_layout(app);
 }
 
@@ -293,8 +299,10 @@ fn run_app(disable_audio: bool, disable_layout: bool, disable_callbacks: bool) -
         {
             let app_weak = app.as_weak();
             app.on_add_component(move |kind| {
+                eprintln!("[on_add_component] Received kind: {}", kind);
                 if let Some(app) = app_weak.upgrade() {
                     let component_kind = match kind {
+                        0 => ComponentKind::None,  // Close button
                         1 => ComponentKind::Metronome,
                         2 => ComponentKind::ChordSheet,
                         3 => ComponentKind::VideoPanel,
@@ -303,11 +311,15 @@ fn run_app(disable_audio: bool, disable_layout: bool, disable_callbacks: bool) -
                         6 => ComponentKind::Scales,
                         _ => ComponentKind::None,
                     };
+                    eprintln!("[on_add_component] Mapped to component_kind: {:?}", component_kind);
                     apply_component(&app, component_kind);
                     // If Fretboard is being shown, ensure fret data is populated
                     if kind == 4 {
+                        eprintln!("[on_add_component] Populating fret data for Fretboard...");
                         update_fret_data(&app);
                     }
+                } else {
+                    eprintln!("[on_add_component] ERROR: Could not upgrade app weak reference");
                 }
             });
         }

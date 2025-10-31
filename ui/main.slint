@@ -2,8 +2,8 @@ import { Button } from "std-widgets.slint";
 
 component Pane inherits Rectangle {
     in property <int> pane-id;
-    in-out property <int> content-kind;
-    in-out property <string> header-title;
+    in property <int> content-kind;
+    in property <string> header-title;
     in property <color> panel_bg;
     in property <color> header_bg;
     in property <color> text_color;
@@ -39,7 +39,7 @@ component Pane inherits Rectangle {
                 padding-left: gutter; padding-right: gutter;
                 Text { text: header-title; color: text_color; vertical-alignment: center; }
                 HorizontalLayout { }
-                Button { text: "✕"; clicked => { root.content-kind = 0; } }
+                Button { text: "✕"; clicked => { root.add-component(0); } }
             }
         }
 
