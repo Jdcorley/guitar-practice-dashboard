@@ -1,0 +1,64 @@
+import { Button } from "std-widgets.slint";
+
+export component Scales inherits Rectangle {
+    in-out property <int> selected-scale: 1;
+    
+    callback scale-selected(scale: int);
+    
+    background: #262830;
+    border-radius: 8px;
+    
+    VerticalLayout {
+        padding: 16px;
+        spacing: 12px;
+        
+        Text {
+            text: "Select Scale";
+            color: #E6E6E6;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        // Grid of scale buttons - using nested HorizontalLayouts for rows
+        VerticalLayout {
+            spacing: 8px;
+            
+            HorizontalLayout {
+                spacing: 8px;
+                Button {
+                    text: "Major";
+                    clicked => { root.selected-scale = 1; root.scale-selected(1); }
+                }
+                Button {
+                    text: "Natural Minor";
+                    clicked => { root.selected-scale = 2; root.scale-selected(2); }
+                }
+            }
+            
+            HorizontalLayout {
+                spacing: 8px;
+                Button {
+                    text: "Major Pentatonic";
+                    clicked => { root.selected-scale = 3; root.scale-selected(3); }
+                }
+                Button {
+                    text: "Minor Pentatonic";
+                    clicked => { root.selected-scale = 4; root.scale-selected(4); }
+                }
+            }
+            
+            HorizontalLayout {
+                spacing: 8px;
+                Button {
+                    text: "Major Blues";
+                    clicked => { root.selected-scale = 5; root.scale-selected(5); }
+                }
+                Button {
+                    text: "Minor Blues";
+                    clicked => { root.selected-scale = 6; root.scale-selected(6); }
+                }
+            }
+        }
+    }
+}
+

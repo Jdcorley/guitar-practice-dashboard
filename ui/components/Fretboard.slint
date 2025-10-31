@@ -1,0 +1,343 @@
+export component FretCell inherits Rectangle {
+    in property <int> string-index;
+    in property <int> fret-number;
+    in property <bool> is-in-scale: false;
+    in property <string> note-name: "";
+    
+    callback clicked;
+    
+    background: is-in-scale ? #5CC8FF40 : transparent;
+    border-width: 1px;
+    border-color: #3A3D4710;
+    
+    TouchArea {
+        clicked => {
+            root.clicked();
+        }
+        
+        Rectangle {
+            width: 100%;
+            height: 100%;
+            
+            Text {
+                text: note-name;
+                color: #E6E6E6;
+                font-size: 10px;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+    }
+}
+
+export struct FretData {
+    string: int,
+    fret: int,
+    note-name: string,
+    is-in-scale: bool,
+}
+
+export component Fretboard inherits Rectangle {
+    in property <int> selected-key: 0;
+    in property <int> selected-scale: 1;
+    in property <[FretData]> string-0-data: [];
+    in property <[FretData]> string-1-data: [];
+    in property <[FretData]> string-2-data: [];
+    in property <[FretData]> string-3-data: [];
+    in property <[FretData]> string-4-data: [];
+    in property <[FretData]> string-5-data: [];
+    
+    callback fret-clicked(string: int, fret: int);
+    callback note-hovered(string: int, fret: int, note-name: string);
+    
+    background: #1E1F24;
+    
+    VerticalLayout {
+        spacing: 8px;
+        padding: 16px;
+        
+        // Headstock area with string labels
+        Rectangle {
+            height: 40px;
+            background: #262830;
+            border-radius: 4px;
+            
+            HorizontalLayout {
+                padding: 8px;
+                spacing: 0px;
+                
+                // Spacer for nut
+                Rectangle { width: 50px; }
+                
+                // String labels (E A D G B E)
+                HorizontalLayout {
+                    spacing: 0px;
+                    
+                    Rectangle {
+                        width: 1px;
+                        background: #5CC8FF60;
+                    }
+                    Rectangle { width: 15px; }
+                    Rectangle {
+                        width: 1px;
+                        background: #5CC8FF60;
+                    }
+                    Rectangle { width: 15px; }
+                    Rectangle {
+                        width: 1px;
+                        background: #5CC8FF60;
+                    }
+                    Rectangle { width: 15px; }
+                    Rectangle {
+                        width: 1px;
+                        background: #5CC8FF60;
+                    }
+                    Rectangle { width: 15px; }
+                    Rectangle {
+                        width: 1px;
+                        background: #5CC8FF60;
+                    }
+                    Rectangle { width: 15px; }
+                    Rectangle {
+                        width: 1px;
+                        background: #5CC8FF60;
+                    }
+                    Rectangle { }
+                }
+                
+                HorizontalLayout {
+                    alignment: center;
+                    spacing: 0px;
+                    Rectangle { width: 50px; }
+                    Text { text: "E"; color: #E6E6E6; font-size: 12px; width: 16px; horizontal-alignment: center; }
+                    Text { text: "A"; color: #E6E6E6; font-size: 12px; width: 16px; horizontal-alignment: center; }
+                    Text { text: "D"; color: #E6E6E6; font-size: 12px; width: 16px; horizontal-alignment: center; }
+                    Text { text: "G"; color: #E6E6E6; font-size: 12px; width: 16px; horizontal-alignment: center; }
+                    Text { text: "B"; color: #E6E6E6; font-size: 12px; width: 16px; horizontal-alignment: center; }
+                    Text { text: "E"; color: #E6E6E6; font-size: 12px; width: 16px; horizontal-alignment: center; }
+                }
+            }
+        }
+        
+        // Fretboard area with grid
+        Rectangle {
+            background: #2A2D35;
+            border-radius: 4px;
+            border-width: 1px;
+            border-color: #3A3D47;
+            
+            Rectangle {
+                clip: true;
+                
+                VerticalLayout {
+                    spacing: 0px;
+                    padding: 8px;
+                    
+                    // Draw 6 strings manually
+                    HorizontalLayout {
+                        spacing: 0px;
+                        Rectangle {
+                            width: 50px;
+                            height: 30px;
+                            background: #4A4D57;
+                            border-radius: 4px;
+                            border-width: 0px;
+                            Rectangle {
+                                width: 2px;
+                                height: 100%;
+                                x: 48px;
+                                background: #3A3D47;
+                            }
+                            Text {
+                                text: "0";
+                                color: #9AA0A6;
+                                font-size: 10px;
+                                horizontal-alignment: center;
+                                vertical-alignment: center;
+                            }
+                        }
+                        for data[index] in root.string-0-data : FretCell {
+                            width: 30px;
+                            height: 30px;
+                            string-index: data.string;
+                            fret-number: data.fret;
+                            note-name: data.note-name;
+                            is-in-scale: data.is-in-scale;
+                            clicked => {
+                                root.fret-clicked(data.string, data.fret);
+                            }
+                        }
+                    }
+                    
+                    HorizontalLayout {
+                        spacing: 0px;
+                        Rectangle {
+                            width: 50px;
+                            height: 30px;
+                            background: #4A4D57;
+                            Rectangle {
+                                width: 2px;
+                                height: 100%;
+                                x: 48px;
+                                background: #3A3D47;
+                            }
+                        }
+                        for data[index] in root.string-1-data : FretCell {
+                            width: 30px;
+                            height: 30px;
+                            string-index: data.string;
+                            fret-number: data.fret;
+                            note-name: data.note-name;
+                            is-in-scale: data.is-in-scale;
+                            clicked => {
+                                root.fret-clicked(data.string, data.fret);
+                            }
+                        }
+                    }
+                    
+                    HorizontalLayout {
+                        spacing: 0px;
+                        Rectangle {
+                            width: 50px;
+                            height: 30px;
+                            background: #4A4D57;
+                            Rectangle {
+                                width: 2px;
+                                height: 100%;
+                                x: 48px;
+                                background: #3A3D47;
+                            }
+                        }
+                        for data[index] in root.string-2-data : FretCell {
+                            width: 30px;
+                            height: 30px;
+                            string-index: data.string;
+                            fret-number: data.fret;
+                            note-name: data.note-name;
+                            is-in-scale: data.is-in-scale;
+                            clicked => {
+                                root.fret-clicked(data.string, data.fret);
+                            }
+                        }
+                    }
+                    
+                    HorizontalLayout {
+                        spacing: 0px;
+                        Rectangle {
+                            width: 50px;
+                            height: 30px;
+                            background: #4A4D57;
+                            Rectangle {
+                                width: 2px;
+                                height: 100%;
+                                x: 48px;
+                                background: #3A3D47;
+                            }
+                        }
+                        for data[index] in root.string-3-data : FretCell {
+                            width: 30px;
+                            height: 30px;
+                            string-index: data.string;
+                            fret-number: data.fret;
+                            note-name: data.note-name;
+                            is-in-scale: data.is-in-scale;
+                            clicked => {
+                                root.fret-clicked(data.string, data.fret);
+                            }
+                        }
+                    }
+                    
+                    HorizontalLayout {
+                        spacing: 0px;
+                        Rectangle {
+                            width: 50px;
+                            height: 30px;
+                            background: #4A4D57;
+                            Rectangle {
+                                width: 2px;
+                                height: 100%;
+                                x: 48px;
+                                background: #3A3D47;
+                            }
+                        }
+                        for data[index] in root.string-4-data : FretCell {
+                            width: 30px;
+                            height: 30px;
+                            string-index: data.string;
+                            fret-number: data.fret;
+                            note-name: data.note-name;
+                            is-in-scale: data.is-in-scale;
+                            clicked => {
+                                root.fret-clicked(data.string, data.fret);
+                            }
+                        }
+                    }
+                    
+                    HorizontalLayout {
+                        spacing: 0px;
+                        Rectangle {
+                            width: 50px;
+                            height: 30px;
+                            background: #4A4D57;
+                            Rectangle {
+                                width: 2px;
+                                height: 100%;
+                                x: 48px;
+                                background: #3A3D47;
+                            }
+                        }
+                        for data[index] in root.string-5-data : FretCell {
+                            width: 30px;
+                            height: 30px;
+                            string-index: data.string;
+                            fret-number: data.fret;
+                            note-name: data.note-name;
+                            is-in-scale: data.is-in-scale;
+                            clicked => {
+                                root.fret-clicked(data.string, data.fret);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Fret numbers along bottom
+        Rectangle {
+            height: 24px;
+            background: transparent;
+            
+            HorizontalLayout {
+                spacing: 0px;
+                padding-left: 50px;
+                
+                Rectangle { width: 30px; Text { text: "0"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; Text { text: "3"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; Text { text: "5"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; Text { text: "7"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; Text { text: "9"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; Text { text: "12"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; Text { text: "15"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; Text { text: "17"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; Text { text: "19"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; Text { text: "21"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; }
+                Rectangle { width: 30px; Text { text: "24"; color: #9AA0A6; font-size: 10px; horizontal-alignment: center; } }
+            }
+        }
+    }
+}

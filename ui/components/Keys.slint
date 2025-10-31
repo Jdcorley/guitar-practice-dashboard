@@ -1,0 +1,92 @@
+import { Button } from "std-widgets.slint";
+
+export component Keys inherits Rectangle {
+    in-out property <int> selected-key: 0;
+    
+    callback key-selected(key: int);
+    
+    background: #262830;
+    border-radius: 8px;
+    
+    VerticalLayout {
+        padding: 16px;
+        spacing: 12px;
+        
+        Text {
+            text: "Select Key";
+            color: #E6E6E6;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        // Grid of key buttons - using nested HorizontalLayouts for rows
+        VerticalLayout {
+            spacing: 8px;
+            
+            HorizontalLayout {
+                spacing: 8px;
+                Button {
+                    text: "C";
+                    clicked => { root.selected-key = 0; root.key-selected(0); }
+                }
+                Button {
+                    text: "C#";
+                    clicked => { root.selected-key = 1; root.key-selected(1); }
+                }
+                Button {
+                    text: "D";
+                    clicked => { root.selected-key = 2; root.key-selected(2); }
+                }
+            }
+            
+            HorizontalLayout {
+                spacing: 8px;
+                Button {
+                    text: "D#";
+                    clicked => { root.selected-key = 3; root.key-selected(3); }
+                }
+                Button {
+                    text: "E";
+                    clicked => { root.selected-key = 4; root.key-selected(4); }
+                }
+                Button {
+                    text: "F";
+                    clicked => { root.selected-key = 5; root.key-selected(5); }
+                }
+            }
+            
+            HorizontalLayout {
+                spacing: 8px;
+                Button {
+                    text: "F#";
+                    clicked => { root.selected-key = 6; root.key-selected(6); }
+                }
+                Button {
+                    text: "G";
+                    clicked => { root.selected-key = 7; root.key-selected(7); }
+                }
+                Button {
+                    text: "G#";
+                    clicked => { root.selected-key = 8; root.key-selected(8); }
+                }
+            }
+            
+            HorizontalLayout {
+                spacing: 8px;
+                Button {
+                    text: "A";
+                    clicked => { root.selected-key = 9; root.key-selected(9); }
+                }
+                Button {
+                    text: "A#";
+                    clicked => { root.selected-key = 10; root.key-selected(10); }
+                }
+                Button {
+                    text: "B";
+                    clicked => { root.selected-key = 11; root.key-selected(11); }
+                }
+            }
+        }
+    }
+}
+

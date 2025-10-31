@@ -9,6 +9,20 @@ component Pane inherits Rectangle {
     in property <color> text_color;
     in property <length> corner_radius;
     in property <length> gutter;
+    in property <int> selected-key;
+    in property <int> selected-scale;
+    in property <[FretData]> string-0-data: [];
+    in property <[FretData]> string-1-data: [];
+    in property <[FretData]> string-2-data: [];
+    in property <[FretData]> string-3-data: [];
+    in property <[FretData]> string-4-data: [];
+    in property <[FretData]> string-5-data: [];
+    
+    callback add-component(kind: int);
+    callback fret-clicked(string: int, fret: int);
+    callback note-hovered(string: int, fret: int, note-name: string);
+    callback key-selected(key: int);
+    callback scale-selected(scale: int);
 
     border-radius: corner_radius;
     background: panel_bg;
@@ -35,17 +49,88 @@ component Pane inherits Rectangle {
             Metronome { visible: content-kind == 1; }
             ChordSheet { visible: content-kind == 2; }
             VideoPanel { visible: content-kind == 3; }
+            // TEMPORARILY DISABLED: Fretboard causes stack overflow during initialization
+            // The 6 for-loops create too many components when instantiated for all 4 panes
+            // Fretboard { 
+            //     visible: content-kind == 4;
+            //     selected-key: root.selected-key;
+            //     selected-scale: root.selected-scale;
+            //     string-0-data: root.string-0-data;
+            //     string-1-data: root.string-1-data;
+            //     string-2-data: root.string-2-data;
+            //     string-3-data: root.string-3-data;
+            //     string-4-data: root.string-4-data;
+            //     string-5-data: root.string-5-data;
+            //     fret-clicked(string, fret) => { root.fret-clicked(string, fret); }
+            //     note-hovered(string, fret, note-name) => { root.note-hovered(string, fret, note-name); }
+            // }
+            // Temporary placeholder for Fretboard
+            Rectangle {
+                visible: content-kind == 4;
+                background: #1E1F24;
+                VerticalLayout {
+                    alignment: center;
+                    Text { text: "Fretboard (disabled for testing)"; color: white; }
+                }
+            }
+            Keys {
+                visible: content-kind == 5;
+                selected-key: root.selected-key;
+                key-selected(key) => { root.key-selected(key); }
+            }
+            Scales {
+                visible: content-kind == 6;
+                selected-scale: root.selected-scale;
+                scale-selected(scale) => { root.scale-selected(scale); }
+            }
             VerticalLayout {
                 visible: content-kind == 0;
                 alignment: center;
-                Text { color: #9AA0A6; text: "Use menu to add a component"; }
+                spacing: 12px;
+                
+                Text { 
+                    color: #9AA0A6; 
+                    text: "Add a component:"; 
+                    font-size: 14px;
+                }
+                
+                VerticalLayout {
+                    spacing: 8px;
+                    
+                    Button { 
+                        text: "Fretboard"; 
+                        clicked => { root.add-component(4); }
+                    }
+                    Button { 
+                        text: "Keys"; 
+                        clicked => { root.add-component(5); }
+                    }
+                    Button { 
+                        text: "Scales"; 
+                        clicked => { root.add-component(6); }
+                    }
+                    Button { 
+                        text: "Metronome"; 
+                        clicked => { root.add-component(1); }
+                    }
+                    Button { 
+                        text: "Chord Sheet"; 
+                        clicked => { root.add-component(2); }
+                    }
+                    Button { 
+                        text: "Video Panel"; 
+                        clicked => { root.add-component(3); }
+                    }
+                }
             }
         }
     }
 }
 
 export component AppWindow inherits Window {
-    width: 1200px; height: 800px; title: "Guitar Practice";
+    preferred-width: 1200px; 
+    preferred-height: 800px;
+    title: "Guitar Practice";
 
     in property <color> surface_bg: #1E1F24;
     in property <color> panel_bg: #262830;
@@ -65,10 +150,26 @@ export component AppWindow inherits Window {
     in-out property <int> bl_kind;
     in-out property <int> br_kind;
 
+    in-out property <int> selected-key: 0;
+    in-out property <int> selected-scale: 1;
+    in-out property <[FretData]> string-0-data: [];
+    in-out property <[FretData]> string-1-data: [];
+    in-out property <[FretData]> string-2-data: [];
+    in-out property <[FretData]> string-3-data: [];
+    in-out property <[FretData]> string-4-data: [];
+    in-out property <[FretData]> string-5-data: [];
+
     callback open-metronome(pane: int);
     callback open-chord-sheet(pane: int);
     callback open-video-panel(pane: int);
+    callback open-fretboard(pane: int);
+    callback open-keys(pane: int);
     callback close-pane(pane: int);
+    callback add-component-pane(pane: int, kind: int);
+    callback fret-clicked(string: int, fret: int);
+    callback note-hovered(string: int, fret: int, note-name: string);
+    callback key-selected(key: int);
+    callback scale-selected(scale: int);
 
     background: surface_bg;
 
@@ -79,33 +180,92 @@ export component AppWindow inherits Window {
 
         VerticalLayout { spacing: 6px;
             HorizontalLayout { spacing: 6px;
-                Pane { pane-id: 0; content-kind: root.tl_kind; header-title: root.tl_title;
+                Pane { 
+                    pane-id: 0; content-kind: root.tl_kind; header-title: root.tl_title;
                     panel_bg: root.panel_bg; header_bg: root.header_bg; text_color: root.text_color;
                     corner_radius: root.corner_radius; gutter: root.gutter;
+                    selected-key: root.selected-key;
+                    selected-scale: root.selected-scale;
+                    string-0-data: root.string-0-data;
+                    string-1-data: root.string-1-data;
+                    string-2-data: root.string-2-data;
+                    string-3-data: root.string-3-data;
+                    string-4-data: root.string-4-data;
+                    string-5-data: root.string-5-data;
+                    add-component(kind) => { root.add-component-pane(0, kind); }
+                    fret-clicked(string, fret) => { root.fret-clicked(string, fret); }
+                    note-hovered(string, fret, note-name) => { root.note-hovered(string, fret, note-name); }
+                    key-selected(key) => { root.key-selected(key); }
+                    scale-selected(scale) => { root.scale-selected(scale); }
                 }
-                Pane { pane-id: 1; content-kind: root.tr_kind; header-title: root.tr_title;
+                Pane { 
+                    pane-id: 1; content-kind: root.tr_kind; header-title: root.tr_title;
                     panel_bg: root.panel_bg; header_bg: root.header_bg; text_color: root.text_color;
                     corner_radius: root.corner_radius; gutter: root.gutter;
+                    selected-key: root.selected-key;
+                    selected-scale: root.selected-scale;
+                    string-0-data: root.string-0-data;
+                    string-1-data: root.string-1-data;
+                    string-2-data: root.string-2-data;
+                    string-3-data: root.string-3-data;
+                    string-4-data: root.string-4-data;
+                    string-5-data: root.string-5-data;
+                    add-component(kind) => { root.add-component-pane(1, kind); }
+                    fret-clicked(string, fret) => { root.fret-clicked(string, fret); }
+                    note-hovered(string, fret, note-name) => { root.note-hovered(string, fret, note-name); }
+                    key-selected(key) => { root.key-selected(key); }
+                    scale-selected(scale) => { root.scale-selected(scale); }
                 }
             }
             HorizontalLayout { spacing: 6px;
-                Pane { pane-id: 2; content-kind: root.bl_kind; header-title: root.bl_title;
+                Pane { 
+                    pane-id: 2; content-kind: root.bl_kind; header-title: root.bl_title;
                     panel_bg: root.panel_bg; header_bg: root.header_bg; text_color: root.text_color;
                     corner_radius: root.corner_radius; gutter: root.gutter;
+                    selected-key: root.selected-key;
+                    selected-scale: root.selected-scale;
+                    string-0-data: root.string-0-data;
+                    string-1-data: root.string-1-data;
+                    string-2-data: root.string-2-data;
+                    string-3-data: root.string-3-data;
+                    string-4-data: root.string-4-data;
+                    string-5-data: root.string-5-data;
+                    add-component(kind) => { root.add-component-pane(2, kind); }
+                    fret-clicked(string, fret) => { root.fret-clicked(string, fret); }
+                    note-hovered(string, fret, note-name) => { root.note-hovered(string, fret, note-name); }
+                    key-selected(key) => { root.key-selected(key); }
+                    scale-selected(scale) => { root.scale-selected(scale); }
                 }
-                Pane { pane-id: 3; content-kind: root.br_kind; header-title: root.br_title;
+                Pane { 
+                    pane-id: 3; content-kind: root.br_kind; header-title: root.br_title;
                     panel_bg: root.panel_bg; header_bg: root.header_bg; text_color: root.text_color;
                     corner_radius: root.corner_radius; gutter: root.gutter;
+                    selected-key: root.selected-key;
+                    selected-scale: root.selected-scale;
+                    string-0-data: root.string-0-data;
+                    string-1-data: root.string-1-data;
+                    string-2-data: root.string-2-data;
+                    string-3-data: root.string-3-data;
+                    string-4-data: root.string-4-data;
+                    string-5-data: root.string-5-data;
+                    add-component(kind) => { root.add-component-pane(3, kind); }
+                    fret-clicked(string, fret) => { root.fret-clicked(string, fret); }
+                    note-hovered(string, fret, note-name) => { root.note-hovered(string, fret, note-name); }
+                    key-selected(key) => { root.key-selected(key); }
+                    scale-selected(scale) => { root.scale-selected(scale); }
                 }
             }
         }
     }
 }
 
-// (Pane defined above)
-
 import { Metronome } from "components/Metronome.slint";
 import { ChordSheet } from "components/ChordSheet.slint";
 import { VideoPanel } from "components/VideoPanel.slint";
+import { Fretboard, FretData } from "components/Fretboard.slint";
+import { Keys } from "components/Keys.slint";
+import { Scales } from "components/Scales.slint";
+
+// (Pane defined above)
 
 
